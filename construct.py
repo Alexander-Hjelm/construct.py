@@ -1,7 +1,8 @@
 import json
 #import jsonpickle
 import os
-import textile
+#import textile
+import markdown
 import sys
 
 class json_serializable:
@@ -83,7 +84,8 @@ for i in range(0, len(sys.argv)):
 
         write_json_object_to_file(root_path + "/index.json", top_block)
 
-        md_top = """# Hello from construct.py!
+        md_top = """
+# Hello from construct.py!
 
 If you see this text, then it means you have successfully generated a test webpage.
 Now you may customize it to your heart's content.
@@ -117,8 +119,13 @@ Now you may customize it to your heart's content.
 
     if arg == "--build" or arg == "-b":
         root_path = sys.argv[i+1]
+        html_doc = ""
+        html_doc += """<!DOCTYPE html>
+<html>
+<body>
+"""
 
-        markdown = {}
+        markdowns = {}
         stylesheets = {}
         template_blocks = {}
         html_snippets = {}
@@ -126,7 +133,7 @@ Now you may customize it to your heart's content.
         # Iterate over all markdown files
         for markdown_file in [f for f in os.listdir(root_path + "/markdown")]:
             print("found markdown file: " + markdown_file)
-            markdown[markdown_file] = read_str_from_file(root_path + "/markdown/" + markdown_file)
+            markdowns[markdown_file] = read_str_from_file(root_path + "/markdown/" + markdown_file)
 
         # Iterate over all stylesheet files
         for stylesheet_file in [f for f in os.listdir(root_path + "/stylesheets")]:
@@ -149,15 +156,23 @@ Now you may customize it to your heart's content.
 
             block = page_block.fromJSON(read_str_from_file(root_path + "/" + block_file))
 
-            html = textile.textile(markdown[block.markdown_file + ".md"])
+            html = markdown.markdown(markdowns[block.markdown_file + ".md"])
+            html_doc += html
             print(html)
 
         for sub_block_array in block.sub_blocks:
             for sub_block_dict in sub_block_array:
                 sub_block = page_block.fromDict(sub_block_dict)
 
-                html = textile.textile(markdown[sub_block.markdown_file + ".md"])
+                html = markdown.markdown(markdowns[sub_block.markdown_file + ".md"])
+                html_doc += html
                 print(html)
 
 
 
+        html_doc += """</body>
+</html>
+"""
+
+        print(html_doc)
+        write_str_to_file("index.html", html_doc)
