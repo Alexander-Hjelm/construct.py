@@ -5,11 +5,6 @@ import textile
 import sys
 
 class json_serializable:
-    def fromJSON(j):
-        pb = page_block("")
-        pb.__dict__ = json.loads(j)
-        return pb
-
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, 
             sort_keys=False, indent=4)
@@ -27,11 +22,21 @@ class page_block(json_serializable):
     def set_stylesheet_file(self, stylesheet_file):
         self.stylesheet_file = stylesheet_file
 
-    def set_template_black_file(self, template_block_file):
+    def set_template_block_file(self, template_block_file):
         self.template_block_file = template_block_file
 
     def set_sub_blocks(self, sub_blocks):
         self.sub_blocks = sub_blocks
+
+    def fromJSON(j):
+        pb = page_block("")
+        pb.__dict__ = json.loads(j)
+        return pb
+
+    def fromDict(dictionary):
+        pb = page_block("")
+        pb.__dict__ = dictionary
+        return pb
 
 print(str(sys.argv))
 
@@ -108,12 +113,51 @@ Now you may customize it to your heart's content.
         write_str_to_file(root_path + "/stylesheets/example_sheet.css", example_stylesheet)
 
         #print(page_block.fromJSON(read_str_from_file("index.json")).markdown_file)
-        
+
+
     if arg == "--build" or arg == "-b":
         root_path = sys.argv[i+1]
 
+        markdown = {}
+        stylesheets = {}
+        template_blocks = {}
+        html_snippets = {}
 
-#html = textile.textile(data)
+        # Iterate over all markdown files
+        for markdown_file in [f for f in os.listdir(root_path + "/markdown")]:
+            print("found markdown file: " + markdown_file)
+            markdown[markdown_file] = read_str_from_file(root_path + "/markdown/" + markdown_file)
 
-#print(html)
+        # Iterate over all stylesheet files
+        for stylesheet_file in [f for f in os.listdir(root_path + "/stylesheets")]:
+            print("found stylesheet file: " + stylesheet_file)
+            stylesheets[stylesheet_file] = read_str_from_file(root_path + "/stylesheets/" + stylesheet_file)
+ 
+        # Iterate over all template block files
+        for template_block_file in [f for f in os.listdir(root_path + "/template-blocks")]:
+            print("found template block file: " + template_block_file)
+            template_blocks[template_block_file] = read_str_from_file(root_path + "/template-blocks/" + template_block_file)
+
+        # Iterate over all html snippet files
+        for html_snippet_file in [f for f in os.listdir(root_path + "/html-snippets")]:
+            print("found html snippet file: " + html_snippet_file)
+            html_snippet_file[html_snippet_file] = read_str_from_file(root_path + "/html-snippets/" + html_snippet_file)
+
+        # Iterate over all block files in project root dir
+        for block_file in [f for f in os.listdir(root_path) if os.path.isfile(os.path.join(root_path, f))]:
+            print("found block file: " + block_file)
+
+            block = page_block.fromJSON(read_str_from_file(root_path + "/" + block_file))
+
+            html = textile.textile(markdown[block.markdown_file + ".md"])
+            print(html)
+
+        for sub_block_array in block.sub_blocks:
+            for sub_block_dict in sub_block_array:
+                sub_block = page_block.fromDict(sub_block_dict)
+
+                html = textile.textile(markdown[sub_block.markdown_file + ".md"])
+                print(html)
+
+
 
