@@ -30,6 +30,9 @@ class page_block(json_serializable):
     def set_width(self, width):
         self.width = width
 
+    def set_is_inner(self, is_inner):
+        self.is_inner = is_inner
+
     def fromJSON(j):
         pb = page_block("")
         pb.__dict__ = json.loads(j)
@@ -55,11 +58,16 @@ def read_str_from_file(filename):
 def write_json_object_to_file(filename, data):
     write_str_to_file(filename, data.toJSON())
 
-def render_block(block):
+def render_block(block, inner):
+    print("rendering block: " + block.id)
+
     html = ""
 
     if hasattr(block, "template_block_file"):
-        html += render_block(template_blocks[block.template_block_file] + ".json")
+        html += render_block(template_blocks[block.template_block_file + ".json"], block)
+
+    if hasattr(block, "is_inner") and block.is_inner == True:
+        html += render_block(inner, None)
 
     if hasattr(block, "html_snippet_file"):
         html += html_snippets[block.html_snippet_file]
@@ -79,7 +87,7 @@ def render_block(block):
                 html += "\n<td width=\"{}%\">".format(sub_block.width)
                 html += "\n<div id={}>\n".format(sub_block.id)
 
-                html += render_block(sub_block)
+                html += render_block(sub_block, inner)
                 html += "\n</div>"
                 html += "\n</td>"
 
@@ -87,6 +95,7 @@ def render_block(block):
             html += "\n</table>"
 
     return html
+
 
 for i in range(0, len(sys.argv)):
 
@@ -182,7 +191,7 @@ Now you may customize it to your heart's content.
         # Iterate over all template block files
         for template_block_file in [f for f in os.listdir(root_path + "/template-blocks")]:
             print("found template block file: " + template_block_file)
-            template_blocks[template_block_file] = read_str_from_file(root_path + "/template-blocks/" + template_block_file)
+            template_blocks[template_block_file] = page_block.fromJSON(read_str_from_file(root_path + "/template-blocks/" + template_block_file))
 
         # Iterate over all html snippet files
         for html_snippet_file in [f for f in os.listdir(root_path + "/html-snippets")]:
@@ -208,11 +217,9 @@ Now you may customize it to your heart's content.
                 html_doc += "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/{}.css\">".format(block.stylesheet_file)
                 write_str_to_file(target_path + "/css/" + block.stylesheet_file + ".css", stylesheets[block.stylesheet_file + ".css"])
 
-            html_doc += """</head>
-<body>
-"""
+            html_doc += "</head>\n<body>"
 
-            html_doc += render_block(block)
+            html_doc += render_block(block, None)
 
             html_doc += """</body>
 </html>
