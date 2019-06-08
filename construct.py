@@ -80,13 +80,14 @@ def render_block(block, inner, currently_in_template):
     if hasattr(block, "sub_blocks"):
         for sub_block_array in block.sub_blocks:
 
-            html += "\n<table>"
+            html += "\n<table style=\"border-spacing:0;\">"
+            html += "\n<tbody style=\"vertical-align:top;\">"
             html += "\n<tr>"
             for sub_block_dict in sub_block_array:
 
                 sub_block = page_block.fromDict(sub_block_dict)
 
-                html += "\n<td width=\"{}%\">".format(sub_block.width)
+                html += "\n<td width=\"{}%\" style=\"margin:0; padding:0\">".format(sub_block.width)
                 html += "\n<div id={}>\n".format(sub_block.id)
 
                 html += render_block(sub_block, inner, False)
@@ -94,6 +95,7 @@ def render_block(block, inner, currently_in_template):
                 html += "\n</td>"
 
             html += "\n</tr>"
+            html += "\n</tbody>"
             html += "\n</table>"
 
     return html
@@ -219,7 +221,7 @@ Now you may customize it to your heart's content.
                 html_doc += "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/{}.css\">".format(block.stylesheet_file)
                 write_str_to_file(target_path + "/css/" + block.stylesheet_file + ".css", stylesheets[block.stylesheet_file + ".css"])
 
-            html_doc += "</head>\n<body>"
+            html_doc += "</head>\n<body style=\"margin:0\">"
 
             html_doc += render_block(block, None, False)
 
