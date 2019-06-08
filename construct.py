@@ -60,6 +60,9 @@ def write_json_object_to_file(filename, data):
 def render_block(block):
     html = markdown.markdown(markdowns[block.markdown_file + ".md"])
 
+    if hasattr(block, "html_snippet_file"):
+        html += html_snippets[block.html_snippet_file]
+
     if hasattr(block, "sub_blocks"):
         for sub_block_array in block.sub_blocks:
 
@@ -148,13 +151,16 @@ Please don't mind me! :3
 }
 """
 
-        write_str_to_file(root_path + "/stylesheets/example_sheet.css", example_stylesheet)
+        write_str_to_file(root_path + "/stylesheets/example_stylesheet.css", example_stylesheet)
 
         #print(page_block.fromJSON(read_str_from_file("index.json")).markdown_file)
 
 
     if arg == "--build" or arg == "-b":
         root_path = sys.argv[i+1]
+
+        if not os.path.exists(root_path + "/out"):
+            os.makedirs(root_path + "/out")
 
         markdowns = {}
         stylesheets = {}
@@ -184,14 +190,26 @@ Please don't mind me! :3
         # Iterate over all block files in project root dir
         for block_file in [f for f in os.listdir(root_path) if os.path.isfile(os.path.join(root_path, f))]:
             print("found block file: " + block_file)
+            block = page_block.fromJSON(read_str_from_file(root_path + "/" + block_file))
 
             html_doc = ""
             html_doc += """<!DOCTYPE html>
 <html>
+<head>
+"""
+
+            if hasattr(block, "stylesheet_file"):
+
+                if not os.path.exists(root_path + "/out/css"):
+                    os.makedirs(root_path + "/out/css")
+
+                html_doc += "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/{}.css\">".format(block.stylesheet_file)
+                write_str_to_file(root_path + "out/css/" + block.stylesheet_file + ".css", stylesheets[block.stylesheet_file + ".css"])
+
+            html_doc += """</head>
 <body>
 """
 
-            block = page_block.fromJSON(read_str_from_file(root_path + "/" + block_file))
             html_doc += render_block(block)
 
             html_doc += """</body>
@@ -199,7 +217,7 @@ Please don't mind me! :3
 """
 
             print(html_doc)
-            write_str_to_file("index.html", html_doc)
+            write_str_to_file(root_path + "/out/" + block.id + ".html", html_doc)
 
             html = markdown.markdown(markdowns[block.markdown_file + ".md"])
             html_doc += html
