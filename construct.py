@@ -1,7 +1,5 @@
 import json
-#import jsonpickle
 import os
-#import textile
 import markdown
 import sys
 
@@ -112,11 +110,11 @@ for i in range(0, len(sys.argv)):
 
         sub_block_1 = page_block("todo")
         sub_block_1.set_markdown_file("things-to-do")
-        sub_block_1.set_width(40)
+        sub_block_1.set_width(80)
 
         sub_block_2 = page_block("test_sub_block")
         sub_block_2.set_markdown_file("test-sub-block")
-        sub_block_2.set_width(60)
+        sub_block_2.set_width(20)
 
         top_block = page_block("index")
         top_block.set_markdown_file("welcome")
@@ -136,11 +134,10 @@ Now you may customize it to your heart's content.
 - Add more pages by creating json block files in the project root directory. Use **index.json** as an example.
 - Change the page contents by editing the markdown files in the **markdown/** folder
 - Change the stylesheet of this page by changing the file: **stylesheets/index.css**
-- Add html snippets in **htmp-snippets/** to insert custom html code in a page
+- Add html snippets in **html-snippets/** to insert custom html code in a page
 """
 
-        md_sub_2 = """## This is just a test sub block.
-Please don't mind me! :3
+        md_sub_2 = """Run construct.py with the --build option to rebuild this page
 """
 
         write_str_to_file(root_path + "/markdown/welcome.md", md_top)
@@ -162,9 +159,10 @@ Please don't mind me! :3
 
     if arg == "--build" or arg == "-b":
         root_path = sys.argv[i+1]
+        target_path = sys.argv[i+2]
 
-        if not os.path.exists(root_path + "/out"):
-            os.makedirs(root_path + "/out")
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
 
         markdowns = {}
         stylesheets = {}
@@ -204,11 +202,11 @@ Please don't mind me! :3
 
             if hasattr(block, "stylesheet_file"):
 
-                if not os.path.exists(root_path + "/out/css"):
-                    os.makedirs(root_path + "/out/css")
+                if not os.path.exists(target_path + "/css"):
+                    os.makedirs(target_path + "/css")
 
                 html_doc += "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/{}.css\">".format(block.stylesheet_file)
-                write_str_to_file(root_path + "out/css/" + block.stylesheet_file + ".css", stylesheets[block.stylesheet_file + ".css"])
+                write_str_to_file(target_path + "/css/" + block.stylesheet_file + ".css", stylesheets[block.stylesheet_file + ".css"])
 
             html_doc += """</head>
 <body>
@@ -221,7 +219,7 @@ Please don't mind me! :3
 """
 
             print(html_doc)
-            write_str_to_file(root_path + "/out/" + block.id + ".html", html_doc)
+            write_str_to_file(target_path + "/" + block.id + ".html", html_doc)
 
             html = markdown.markdown(markdowns[block.markdown_file + ".md"])
             html_doc += html
