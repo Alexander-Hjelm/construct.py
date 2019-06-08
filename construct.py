@@ -30,6 +30,9 @@ class page_block(json_serializable):
     def set_width(self, width):
         self.width = width
 
+    def set_css_class(self, css_class):
+        self.css_class = css_class
+
     def set_is_inner(self, is_inner):
         self.is_inner = is_inner
 
@@ -86,9 +89,12 @@ def render_block(block, inner, currently_in_template):
             for sub_block_dict in sub_block_array:
 
                 sub_block = page_block.fromDict(sub_block_dict)
+                css_class = ""
+                if hasattr(sub_block, "css_class"):
+                    css_class = "class=" + sub_block.css_class
 
                 html += "\n<td width=\"{}%\" style=\"margin:0; padding:0\">".format(sub_block.width)
-                html += "\n<div id={}>\n".format(sub_block.id)
+                html += "\n<div id={} {} width=100%>\n".format(sub_block.id, css_class)
 
                 html += render_block(sub_block, inner, False)
                 html += "\n</div>"
