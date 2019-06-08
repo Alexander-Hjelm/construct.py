@@ -58,16 +58,18 @@ def read_str_from_file(filename):
 def write_json_object_to_file(filename, data):
     write_str_to_file(filename, data.toJSON())
 
-def render_block(block, inner):
+def render_block(block, inner, currently_in_template):
     print("rendering block: " + block.id)
 
     html = ""
 
-    if hasattr(block, "template_block_file"):
-        html += render_block(template_blocks[block.template_block_file + ".json"], block)
+    if hasattr(block, "template_block_file") and not currently_in_template:
+        html += render_block(template_blocks[block.template_block_file + ".json"], block, True)
+        return html
 
     if hasattr(block, "is_inner") and block.is_inner == True:
-        html += render_block(inner, None)
+        html += render_block(inner, None, True)
+        return html
 
     if hasattr(block, "html_snippet_file"):
         html += html_snippets[block.html_snippet_file]
@@ -87,7 +89,7 @@ def render_block(block, inner):
                 html += "\n<td width=\"{}%\">".format(sub_block.width)
                 html += "\n<div id={}>\n".format(sub_block.id)
 
-                html += render_block(sub_block, inner)
+                html += render_block(sub_block, inner, False)
                 html += "\n</div>"
                 html += "\n</td>"
 
@@ -219,7 +221,7 @@ Now you may customize it to your heart's content.
 
             html_doc += "</head>\n<body>"
 
-            html_doc += render_block(block, None)
+            html_doc += render_block(block, None, False)
 
             html_doc += """</body>
 </html>
