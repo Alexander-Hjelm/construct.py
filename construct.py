@@ -58,10 +58,16 @@ def write_json_object_to_file(filename, data):
     write_str_to_file(filename, data.toJSON())
 
 def render_block(block):
-    html = markdown.markdown(markdowns[block.markdown_file + ".md"])
+    html = ""
+
+    if hasattr(block, "template_block_file"):
+        html += render_block(template_blocks[block.template_block_file] + ".json")
 
     if hasattr(block, "html_snippet_file"):
         html += html_snippets[block.html_snippet_file]
+
+    if hasattr(block, "markdown_file"):
+        html += markdown.markdown(markdowns[block.markdown_file + ".md"])
 
     if hasattr(block, "sub_blocks"):
         for sub_block_array in block.sub_blocks:
@@ -74,6 +80,7 @@ def render_block(block):
 
                 html += "\n<td width=\"{}%\">".format(sub_block.width)
                 html += "\n<div id={}>\n".format(sub_block.id)
+
                 html += render_block(sub_block)
                 html += "\n</div>"
                 html += "\n</td>"
@@ -152,9 +159,6 @@ Please don't mind me! :3
 """
 
         write_str_to_file(root_path + "/stylesheets/example_stylesheet.css", example_stylesheet)
-
-        #print(page_block.fromJSON(read_str_from_file("index.json")).markdown_file)
-
 
     if arg == "--build" or arg == "-b":
         root_path = sys.argv[i+1]
