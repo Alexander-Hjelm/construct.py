@@ -29,6 +29,9 @@ class page_block(json_serializable):
     def set_sub_blocks(self, sub_blocks):
         self.sub_blocks = sub_blocks
 
+    def set_width(self, width):
+        self.width = width
+
     def fromJSON(j):
         pb = page_block("")
         pb.__dict__ = json.loads(j)
@@ -54,6 +57,29 @@ def read_str_from_file(filename):
 def write_json_object_to_file(filename, data):
     write_str_to_file(filename, data.toJSON())
 
+def render_block(block):
+    html = markdown.markdown(markdowns[block.markdown_file + ".md"])
+
+    if hasattr(block, "sub_blocks"):
+        for sub_block_array in block.sub_blocks:
+
+            html += "\n<table>"
+            html += "\n<tr>"
+            for sub_block_dict in sub_block_array:
+
+                sub_block = page_block.fromDict(sub_block_dict)
+
+                html += "\n<td width=\"{}%\">".format(sub_block.width)
+                html += "\n<div id={}>\n".format(sub_block.id)
+                html += render_block(sub_block)
+                html += "\n</div>"
+                html += "\n</td>"
+
+            html += "\n</tr>"
+            html += "\n</table>"
+
+    return html
+
 for i in range(0, len(sys.argv)):
 
     arg = sys.argv[i]
@@ -74,13 +100,18 @@ for i in range(0, len(sys.argv)):
         if not os.path.exists(root_path + "/template-blocks"):
             os.makedirs(root_path + "/template-blocks")
 
-        sub_block = page_block("todo")
-        sub_block.set_markdown_file("things-to-do")
+        sub_block_1 = page_block("todo")
+        sub_block_1.set_markdown_file("things-to-do")
+        sub_block_1.set_width(40)
+
+        sub_block_2 = page_block("test_sub_block")
+        sub_block_2.set_markdown_file("test-sub-block")
+        sub_block_2.set_width(60)
 
         top_block = page_block("index")
         top_block.set_markdown_file("welcome")
         top_block.set_stylesheet_file("example_stylesheet")
-        top_block.set_sub_blocks([[sub_block]])
+        top_block.set_sub_blocks([[sub_block_1, sub_block_2]])
 
         write_json_object_to_file(root_path + "/index.json", top_block)
 
@@ -91,15 +122,20 @@ If you see this text, then it means you have successfully generated a test webpa
 Now you may customize it to your heart's content.
 """
 
-        md_sub = """## A few places to start:
+        md_sub_1 = """## A few places to start:
 - Add more pages by creating json block files in the project root directory. Use **index.json** as an example.
 - Change the page contents by editing the markdown files in the **markdown/** folder
 - Change the stylesheet of this page by changing the file: **stylesheets/index.css**
 - Add html snippets in **htmp-snippets/** to insert custom html code in a page
 """
 
+        md_sub_2 = """## This is just a test sub block.
+Please don't mind me! :3
+"""
+
         write_str_to_file(root_path + "/markdown/welcome.md", md_top)
-        write_str_to_file(root_path + "/markdown/things-to-do.md", md_sub)
+        write_str_to_file(root_path + "/markdown/things-to-do.md", md_sub_1)
+        write_str_to_file(root_path + "/markdown/test-sub-block.md", md_sub_2)
 
         example_stylesheet = """.red {
    color: red;
@@ -119,11 +155,6 @@ Now you may customize it to your heart's content.
 
     if arg == "--build" or arg == "-b":
         root_path = sys.argv[i+1]
-        html_doc = ""
-        html_doc += """<!DOCTYPE html>
-<html>
-<body>
-"""
 
         markdowns = {}
         stylesheets = {}
@@ -154,25 +185,22 @@ Now you may customize it to your heart's content.
         for block_file in [f for f in os.listdir(root_path) if os.path.isfile(os.path.join(root_path, f))]:
             print("found block file: " + block_file)
 
+            html_doc = ""
+            html_doc += """<!DOCTYPE html>
+<html>
+<body>
+"""
+
             block = page_block.fromJSON(read_str_from_file(root_path + "/" + block_file))
+            html_doc += render_block(block)
 
-            html = markdown.markdown(markdowns[block.markdown_file + ".md"])
-            html_doc += html
-            print(html)
-
-        for sub_block_array in block.sub_blocks:
-            for sub_block_dict in sub_block_array:
-                sub_block = page_block.fromDict(sub_block_dict)
-
-                html = markdown.markdown(markdowns[sub_block.markdown_file + ".md"])
-                html_doc += html
-                print(html)
-
-
-
-        html_doc += """</body>
+            html_doc += """</body>
 </html>
 """
 
-        print(html_doc)
-        write_str_to_file("index.html", html_doc)
+            print(html_doc)
+            write_str_to_file("index.html", html_doc)
+
+            html = markdown.markdown(markdowns[block.markdown_file + ".md"])
+            html_doc += html
+
