@@ -75,7 +75,7 @@ def render_block(block, inner, currently_in_template):
         return html
 
     if hasattr(block, "html_snippet_file"):
-        html += html_snippets[block.html_snippet_file]
+        html += html_snippets[block.html_snippet_file + ".html"]
 
     if hasattr(block, "markdown_file"):
         html += markdown.markdown(markdowns[block.markdown_file + ".md"])
@@ -206,7 +206,7 @@ Now you may customize it to your heart's content.
         # Iterate over all html snippet files
         for html_snippet_file in [f for f in os.listdir(root_path + "/html-snippets")]:
             print("found html snippet file: " + html_snippet_file)
-            html_snippet_file[html_snippet_file] = read_str_from_file(root_path + "/html-snippets/" + html_snippet_file)
+            html_snippets[html_snippet_file] = read_str_from_file(root_path + "/html-snippets/" + html_snippet_file)
 
         # Iterate over all block files in project root dir
         for block_file in [f for f in os.listdir(root_path) if os.path.isfile(os.path.join(root_path, f))]:
