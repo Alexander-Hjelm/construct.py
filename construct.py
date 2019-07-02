@@ -12,6 +12,9 @@ class page_block(json_serializable):
     def __init__(self, id):
         self.id = id
 
+    def set_title(self, title):
+        self.title = title
+
     def set_html_snippet_file(self, html_snippet_file):
         self.html_snippet_file = html_snippet_file
 
@@ -67,6 +70,7 @@ def render_block(block, inner, currently_in_template):
     html = ""
 
     if hasattr(block, "template_block_file") and not currently_in_template:
+        print ("RENDERING TEMPLATE: " + block.template_block_file)
         html += render_block(template_blocks[block.template_block_file + ".json"], block, True)
         return html
 
@@ -83,7 +87,7 @@ def render_block(block, inner, currently_in_template):
     if hasattr(block, "sub_blocks"):
         for sub_block_array in block.sub_blocks:
 
-            html += "\n<table style=\"border-spacing:0;\">"
+            html += "\n<table style=\"border-spacing:0; width:100%\">"
             html += "\n<tbody style=\"vertical-align:top;\">"
             html += "\n<tr>"
             for sub_block_dict in sub_block_array:
@@ -219,6 +223,9 @@ Now you may customize it to your heart's content.
 <head>
 """
 
+            if hasattr(block, "title"):
+                html_doc += "<title>{}</title>\n".format(block.title)
+
             if hasattr(block, "stylesheet_file"):
 
                 if not os.path.exists(target_path + "/css"):
@@ -227,7 +234,7 @@ Now you may customize it to your heart's content.
                 html_doc += "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/{}.css\">".format(block.stylesheet_file)
                 write_str_to_file(target_path + "/css/" + block.stylesheet_file + ".css", stylesheets[block.stylesheet_file + ".css"])
 
-            html_doc += "</head>\n<body style=\"margin:0\">"
+            html_doc += "\n</head>\n<body style=\"margin:0\">"
 
             html_doc += render_block(block, None, False)
 
@@ -237,7 +244,4 @@ Now you may customize it to your heart's content.
 
             print(html_doc)
             write_str_to_file(target_path + "/" + block.id + ".html", html_doc)
-
-            html = markdown.markdown(markdowns[block.markdown_file + ".md"])
-            html_doc += html
 
